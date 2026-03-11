@@ -13,8 +13,8 @@ import re
 
 app = Flask(__name__)
 
-# Configuration JWT - version ultra simple
-app.config['JWT_SECRET_KEY'] = 'cedar-o-super-secret-key-2026-that-is-very-long-and-secure-123456789'  # Clé très simple
+# Configuration JWT
+app.config['JWT_SECRET_KEY'] = 'cedar-o-super-secret-key-2026-that-is-very-long-and-secure-123456789'
 app.config['JWT_ALGORITHM'] = 'HS256'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=8)
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
@@ -23,9 +23,41 @@ app.config['JWT_HEADER_TYPE'] = 'Bearer'
 
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
-CORS(app)
 
-# ===== GESTIONNAIRES D'ERREURS JWT AJOUTÉS =====
+# ===== CONFIGURATION CORS COMPLÈTE POUR NETLIFY =====
+CORS(app, 
+     origins=[
+         'https://verdant-bublanina-0bb212.netlify.app',  # Ton site Netlify
+         'http://localhost:3000',  # Pour le développement local
+         'https://*.netlify.app'   # Pour tous les sous-domaines Netlify
+     ],
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+     allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+     supports_credentials=True,
+     expose_headers=['Content-Type', 'Authorization'],
+     max_age=3600)
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://verdant-bublanina-0bb212.netlify.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Max-Age', '3600')
+    return response
+
+@app.route('/api/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    response = jsonify({'status': 'OK'})
+    response.headers.add('Access-Control-Allow-Origin', 'https://verdant-bublanina-0bb212.netlify.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Max-Age', '3600')
+    return response, 200
+# ===== FIN CONFIGURATION CORS =====
+
+# ===== GESTIONNAIRES D'ERREURS JWT =====
 @jwt.invalid_token_loader
 def invalid_token_callback(error):
     return jsonify({

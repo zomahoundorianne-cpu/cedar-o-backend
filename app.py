@@ -25,6 +25,32 @@ jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
 CORS(app)
 
+# ===== GESTIONNAIRES D'ERREURS JWT AJOUTÉS =====
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    return jsonify({
+        "success": False,
+        "error": "Token invalide",
+        "msg": str(error)
+    }), 401
+
+@jwt.unauthorized_loader
+def missing_token_callback(error):
+    return jsonify({
+        "success": False,
+        "error": "Token manquant",
+        "msg": "Authorization header manquant ou mal formaté"
+    }), 401
+
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_payload):
+    return jsonify({
+        "success": False,
+        "error": "Token expiré",
+        "msg": "Veuillez vous reconnecter"
+    }), 401
+# ===== FIN GESTIONNAIRES JWT =====
+
 # Configuration pour les uploads
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}

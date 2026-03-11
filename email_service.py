@@ -5,6 +5,10 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from models import RendezVous, Etudiant
 from config import Config
+import socket
+
+# Configuration du timeout global pour les connexions réseau
+socket.setdefaulttimeout(15)  # Timeout de 15 secondes maximum
 
 def envoyer_rappel_etudiant(rdv, etudiant, type_rappel):
     """
@@ -117,7 +121,6 @@ def verifier_et_envoyer_rappels():
         aujourdhui = datetime.now().date()
         maintenant = datetime.now()
         
-        # ===== PRINTS DE DÉBOGAGE AJOUTÉS =====
         print("="*50)
         print(f"🔍 DÉBOGAGE - Date du jour: {aujourdhui}")
         print(f"🔍 DÉBOGAGE - Heure: {maintenant.strftime('%H:%M:%S')}")
@@ -195,7 +198,7 @@ def verifier_et_envoyer_rappels():
 
 def envoyer_email(destinataire, sujet, corps_html, corps_texte=""):
     """
-    Fonction pour envoyer un email
+    Fonction pour envoyer un email avec timeout réduit
     """
     try:
         print(f"📧 DÉBOGAGE - Tentative d'envoi email à {destinataire}")
@@ -213,11 +216,15 @@ def envoyer_email(destinataire, sujet, corps_html, corps_texte=""):
         part_html = MIMEText(corps_html, 'html')
         msg.attach(part_html)
         
-        print(f"📧 DÉBOGAGE - Connexion à {Config.MAIL_SERVER}:{Config.MAIL_PORT}")
-        server = smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT)
+        print(f"📧 DÉBOGAGE - Connexion à {Config.MAIL_SERVER}:{Config.MAIL_PORT} (timeout 10s)")
+        
+        # Connexion avec timeout explicite
+        server = smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT, timeout=10)
         server.starttls()
+        
         print(f"📧 DÉBOGAGE - Login avec {Config.MAIL_USERNAME}")
         server.login(Config.MAIL_USERNAME, Config.MAIL_PASSWORD)
+        
         print(f"📧 DÉBOGAGE - Envoi du message")
         server.send_message(msg)
         server.quit()
@@ -225,6 +232,12 @@ def envoyer_email(destinataire, sujet, corps_html, corps_texte=""):
         print(f"✅ DÉBOGAGE - Email envoyé avec succès")
         return True
         
+    except socket.timeout:
+        print(f"❌ DÉBOGAGE - Timeout: La connexion a pris trop de temps")
+        return False
+    except smtplib.SMTPAuthenticationError:
+        print(f"❌ DÉBOGAGE - Erreur d'authentification: Vérifie ton mot de passe d'application")
+        return False
     except Exception as e:
         print(f"❌ DÉBOGAGE - Erreur envoi email: {str(e)}")
         import traceback

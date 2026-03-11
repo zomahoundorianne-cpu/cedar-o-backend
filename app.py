@@ -24,37 +24,15 @@ app.config['JWT_HEADER_TYPE'] = 'Bearer'
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
 
-# ===== CONFIGURATION CORS COMPLÈTE POUR NETLIFY =====
+# ===== CONFIGURATION CORS SIMPLIFIÉE (UNE SEULE FOIS) =====
 CORS(app, 
      origins=[
          'https://verdant-bublanina-0bb212.netlify.app',  # Ton site Netlify
-         'http://localhost:3000',  # Pour le développement local
-         'https://*.netlify.app'   # Pour tous les sous-domaines Netlify
+         'http://localhost:3000'  # Pour le développement local
      ],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-     allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
-     supports_credentials=True,
-     expose_headers=['Content-Type', 'Authorization'],
-     max_age=3600)
-
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', 'https://verdant-bublanina-0bb212.netlify.app')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    response.headers.add('Access-Control-Max-Age', '3600')
-    return response
-
-@app.route('/api/<path:path>', methods=['OPTIONS'])
-def handle_options(path):
-    response = jsonify({'status': 'OK'})
-    response.headers.add('Access-Control-Allow-Origin', 'https://verdant-bublanina-0bb212.netlify.app')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    response.headers.add('Access-Control-Max-Age', '3600')
-    return response, 200
+     allow_headers=['Content-Type', 'Authorization'],
+     supports_credentials=True)
 # ===== FIN CONFIGURATION CORS =====
 
 # ===== GESTIONNAIRES D'ERREURS JWT =====
@@ -329,4 +307,4 @@ def verifier_rappels():
 
 # -------------------- DÉMARRAGE --------------------
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)et

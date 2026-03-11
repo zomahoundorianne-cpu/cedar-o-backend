@@ -13,9 +13,13 @@ import re
 
 app = Flask(__name__)
 
-# Configuration JWT
-app.config['JWT_SECRET_KEY'] = 'votre-cle-secrete-tres-longue-et-difficile-a-deviner'
+# Configuration JWT - version corrigée
+app.config['JWT_SECRET_KEY'] = 'une-cle-secrete-tres-longue-et-sans-espaces-123456789'
+app.config['JWT_ALGORITHM'] = 'HS256'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=8)
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
+app.config['JWT_HEADER_NAME'] = 'Authorization'
+app.config['JWT_HEADER_TYPE'] = 'Bearer'
 
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)

@@ -14,7 +14,7 @@ import re
 app = Flask(__name__)
 
 # Configuration JWT - version ultra simple
-app.config['JWT_SECRET_KEY'] = 'cedar-o'  # Clé très simple
+app.config['JWT_SECRET_KEY'] = 'cedar-o-super-secret-key-2026-that-is-very-long-and-secure-123456789'  # Clé très simple
 app.config['JWT_ALGORITHM'] = 'HS256'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=8)
 app.config['JWT_TOKEN_LOCATION'] = ['headers']

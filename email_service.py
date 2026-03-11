@@ -244,7 +244,76 @@ def envoyer_email(destinataire, sujet, corps_html, corps_texte=""):
         traceback.print_exc()
         return False
 
-# Pour tester
+# ===== TEST DIRECT AJOUTÉ =====
+def test_envoi_email_direct():
+    """
+    Fonction de test pour vérifier la configuration email
+    """
+    print("\n" + "="*50)
+    print("🔧 TEST DIRECT D'ENVOI D'EMAIL")
+    print("="*50)
+    
+    print(f"📧 Configuration:")
+    print(f"   - MAIL_USERNAME: {Config.MAIL_USERNAME}")
+    print(f"   - MAIL_SERVER: {Config.MAIL_SERVER}")
+    print(f"   - MAIL_PORT: {Config.MAIL_PORT}")
+    print(f"   - Destinataire: {Config.CABINET_EMAIL}")
+    
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "🔧 Test direct Cedar-O"
+        msg['From'] = Config.MAIL_USERNAME
+        msg['To'] = Config.CABINET_EMAIL
+        
+        corps = """
+        <html>
+        <body>
+            <h2>Test direct d'envoi d'email</h2>
+            <p>Si tu reçois ce message, la configuration email fonctionne !</p>
+            <p>✅ Félicitations !</p>
+        </body>
+        </html>
+        """
+        
+        part_html = MIMEText(corps, 'html')
+        msg.attach(part_html)
+        
+        print(f"\n📧 Tentative de connexion à {Config.MAIL_SERVER}:{Config.MAIL_PORT}...")
+        server = smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT, timeout=10)
+        server.starttls()
+        
+        print(f"📧 Tentative de login avec {Config.MAIL_USERNAME}...")
+        server.login(Config.MAIL_USERNAME, Config.MAIL_PASSWORD)
+        
+        print(f"📧 Envoi du message...")
+        server.send_message(msg)
+        server.quit()
+        
+        print("✅ EMAIL ENVOYÉ AVEC SUCCÈS !")
+        return True
+        
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"❌ ERREUR D'AUTHENTIFICATION: {str(e)}")
+        print("   Vérifie que:")
+        print("   - Le mot de passe d'application Gmail est correct")
+        print("   - L'authentification à deux facteurs est activée")
+        print("   - Le mot de passe d'application a été généré récemment")
+        return False
+    except socket.timeout:
+        print(f"❌ TIMEOUT: La connexion prend trop de temps")
+        print("   Vérifie que Railway n'a pas bloqué le port 587")
+        return False
+    except Exception as e:
+        print(f"❌ ERREUR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+# ===== PARTIE TEST =====
 if __name__ == '__main__':
-    print("🔍 Vérification des rappels...")
+    print("🔍 Test du système de rappels...")
+    print("\n1️⃣ Test d'envoi direct d'email")
+    test_envoi_email_direct()
+    
+    print("\n2️⃣ Test de vérification des rappels")
     verifier_et_envoyer_rappels()

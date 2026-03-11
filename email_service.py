@@ -117,41 +117,80 @@ def verifier_et_envoyer_rappels():
         aujourdhui = datetime.now().date()
         maintenant = datetime.now()
         
+        # ===== PRINTS DE DÉBOGAGE AJOUTÉS =====
+        print("="*50)
+        print(f"🔍 DÉBOGAGE - Date du jour: {aujourdhui}")
+        print(f"🔍 DÉBOGAGE - Heure: {maintenant.strftime('%H:%M:%S')}")
+        print("="*50)
+        
         # Chercher tous les rendez-vous à venir
         rendezvous = RendezVous.query.filter(
             RendezVous.statut == 'à venir'
         ).all()
         
+        print(f"🔍 DÉBOGAGE - Rendez-vous à venir trouvés: {len(rendezvous)}")
+        
+        if len(rendezvous) == 0:
+            print("📭 DÉBOGAGE - Aucun rendez-vous à venir")
+            return 0
+        
         rappels_envoyes = 0
         
-        for rdv in rendezvous:
+        for i, rdv in enumerate(rendezvous):
             etudiant = Etudiant.query.get(rdv.etudiant_id)
             if not etudiant:
+                print(f"⚠️ DÉBOGAGE - Étudiant non trouvé pour rdv {rdv.id}")
                 continue
             
             date_rdv = rdv.date_rdv.date()
             jours_avant = (date_rdv - aujourdhui).days
             
+            print(f"\n📅 DÉBOGAGE - Rendez-vous #{i+1}:")
+            print(f"   - ID: {rdv.id}")
+            print(f"   - Étudiant: {etudiant.prenom} {etudiant.nom}")
+            print(f"   - Date RDV: {date_rdv}")
+            print(f"   - Jours avant: {jours_avant}")
+            print(f"   - Statut: {rdv.statut}")
+            
             # Jour J (le jour même)
             if jours_avant == 0 and maintenant.hour < 10:  # Avant 10h
+                print(f"   ✅ Condition JOUR J remplie (jours_avant=0, heure<10)")
                 if envoyer_rappel_etudiant(rdv, etudiant, 'jour_j'):
                     rappels_envoyes += 1
+                    print(f"   ✅ Rappel JOUR J envoyé")
+                else:
+                    print(f"   ❌ Échec envoi rappel JOUR J")
             
             # 2 jours avant
             elif jours_avant == 2:
+                print(f"   ✅ Condition J-2 remplie (jours_avant=2)")
                 if envoyer_rappel_etudiant(rdv, etudiant, '2_jours'):
                     rappels_envoyes += 1
+                    print(f"   ✅ Rappel J-2 envoyé")
+                else:
+                    print(f"   ❌ Échec envoi rappel J-2")
             
             # Veille (1 jour avant)
             elif jours_avant == 1:
+                print(f"   ✅ Condition VEILLE remplie (jours_avant=1)")
                 if envoyer_rappel_etudiant(rdv, etudiant, 'veille'):
                     rappels_envoyes += 1
+                    print(f"   ✅ Rappel VEILLE envoyé")
+                else:
+                    print(f"   ❌ Échec envoi rappel VEILLE")
+            
+            else:
+                print(f"   ⏳ Condition non remplie (jours_avant={jours_avant})")
         
-        print(f"📧 {rappels_envoyes} rappels envoyés")
+        print("\n" + "="*50)
+        print(f"📧 DÉBOGAGE - TOTAL rappels envoyés: {rappels_envoyes}")
+        print("="*50)
         return rappels_envoyes
         
     except Exception as e:
-        print(f"❌ Erreur lors de la vérification des rappels: {str(e)}")
+        print(f"❌ DÉBOGAGE - Erreur dans verifier_et_envoyer_rappels: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return 0
 
 def envoyer_email(destinataire, sujet, corps_html, corps_texte=""):
@@ -159,6 +198,9 @@ def envoyer_email(destinataire, sujet, corps_html, corps_texte=""):
     Fonction pour envoyer un email
     """
     try:
+        print(f"📧 DÉBOGAGE - Tentative d'envoi email à {destinataire}")
+        print(f"📧 DÉBOGAGE - Sujet: {sujet}")
+        
         msg = MIMEMultipart('alternative')
         msg['Subject'] = sujet
         msg['From'] = Config.MAIL_USERNAME
@@ -171,16 +213,22 @@ def envoyer_email(destinataire, sujet, corps_html, corps_texte=""):
         part_html = MIMEText(corps_html, 'html')
         msg.attach(part_html)
         
+        print(f"📧 DÉBOGAGE - Connexion à {Config.MAIL_SERVER}:{Config.MAIL_PORT}")
         server = smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT)
         server.starttls()
+        print(f"📧 DÉBOGAGE - Login avec {Config.MAIL_USERNAME}")
         server.login(Config.MAIL_USERNAME, Config.MAIL_PASSWORD)
+        print(f"📧 DÉBOGAGE - Envoi du message")
         server.send_message(msg)
         server.quit()
         
+        print(f"✅ DÉBOGAGE - Email envoyé avec succès")
         return True
         
     except Exception as e:
-        print(f"❌ Erreur envoi email: {str(e)}")
+        print(f"❌ DÉBOGAGE - Erreur envoi email: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 # Pour tester
